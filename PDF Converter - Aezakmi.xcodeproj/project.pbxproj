@@ -16,6 +16,11 @@
 			path = "PDF Converter - Aezakmi";
 			sourceTree = "<group>";
 		};
+		B64C0FEA2EA1847E009EBEF0 /* img */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = img;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +37,7 @@
 		B64C0FA32E9FF0C9009EBEF0 = {
 			isa = PBXGroup;
 			children = (
+				B64C0FEA2EA1847E009EBEF0 /* img */,
 				B64C0FAE2E9FF0C9009EBEF0 /* PDF Converter - Aezakmi */,
 				B64C0FAD2E9FF0C9009EBEF0 /* Products */,
 			);
@@ -62,6 +68,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				B64C0FAE2E9FF0C9009EBEF0 /* PDF Converter - Aezakmi */,
+				B64C0FEA2EA1847E009EBEF0 /* img */,
 			);
 			name = "PDF Converter - Aezakmi";
 			packageProductDependencies = (
