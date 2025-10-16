@@ -9,6 +9,7 @@ import SwiftUI
 
 extension Color {
     static let gold = Color(red: 212/255, green: 175/255, blue: 55/255)
+    static let darkGold = Color(red: 180/255, green: 150/255, blue: 45/255)
 }
 
 extension UIColor {
