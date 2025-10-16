@@ -205,8 +205,7 @@ struct GenerationView: View {
             }
             .alert(isPresented: $viewModel.showAlert) {
                 Alert(
-                    title: Text("Информация"),
-                    message: Text(viewModel.alertMessage),
+                    title: Text(viewModel.alertMessage),
                     dismissButton: .default(Text("OK"))
                 )
             }

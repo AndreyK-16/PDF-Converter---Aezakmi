@@ -27,6 +27,18 @@ class GenerationViewModel: ObservableObject {
         // MARK: Получаем директорию Documents для постоянного хранения
         documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         loadSavedDocuments()
+        
+        NotificationCenter.default.addObserver(
+            forName: .documentsDidUpdate,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.loadSavedDocuments()
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: Конвертация в PDF
@@ -36,22 +48,17 @@ class GenerationViewModel: ObservableObject {
             return
         }
         
-        // новый PDF документ
         let pdfData = NSMutableData()
         UIGraphicsBeginPDFContextToData(pdfData, CGRect.zero, nil)
         
         for image in selectedImages {
-            // новая страница
             let imageSize = image.size
             let pageRect = CGRect(x: 0, y: 0, width: imageSize.width, height: imageSize.height)
             UIGraphicsBeginPDFPageWithInfo(pageRect, nil)
-            
-            // отрисовка изображения на странице
             image.draw(in: pageRect)
         }
         UIGraphicsEndPDFContext()
         
-        // Сохранение PDF в постоянную директорию
         let fileName = "document_\(Int(Date().timeIntervalSince1970)).pdf"
         let fileURL = documentsDirectory.appendingPathComponent(fileName)
         
@@ -67,11 +74,64 @@ class GenerationViewModel: ObservableObject {
             
             generatedDocuments.insert(document, at: 0)
             currentPDFURL = fileURL
+            NotificationCenter.default.post(name: .documentsDidUpdate, object: nil)
             clearAllImages()
             
         } catch {
             showAlert(message: "Ошибка при создании PDF: \(error.localizedDescription)")
         }
+        NotificationCenter.default.post(name: .documentsDidUpdate, object: nil)
+    }
+    
+    // MARK: Загрузка сохраненных документов
+    func loadSavedDocuments() {
+        do {
+            let files = try fileManager.contentsOfDirectory(
+                at: documentsDirectory,
+                includingPropertiesForKeys: [.creationDateKey],
+                options: .skipsHiddenFiles
+            )
+            
+            let pdfFiles = files.filter { $0.pathExtension.lowercased() == "pdf" }
+            
+            let documents = pdfFiles.compactMap { url -> Document? in
+                guard let creationDate = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate else {
+                    return nil
+                }
+                return Document(
+                    name: url.deletingPathExtension().lastPathComponent,
+                    creationDate: creationDate,
+                    fileURL: url,
+                    pages: []
+                )
+            }
+            
+            generatedDocuments = documents.sorted { $0.creationDate > $1.creationDate }
+            
+        } catch {
+            print("Ошибка при загрузке документов: \(error)")
+        }
+    }
+    
+    // MARK: Удаление документа
+    func deleteDocument() {
+        guard let document = documentToDelete else { return }
+        
+        do {
+            if fileManager.fileExists(atPath: document.fileURL.path) {
+                try fileManager.removeItem(at: document.fileURL)
+                generatedDocuments.removeAll { $0.id == document.id }
+                
+                // Отправляем уведомление об удалении документа
+                NotificationCenter.default.post(name: .documentsDidUpdate, object: nil)
+                
+                showAlert(message: "Документ удален")
+            }
+        } catch {
+            showAlert(message: "Ошибка при удалении документа: \(error.localizedDescription)")
+        }
+        
+        documentToDelete = nil
     }
     
     // MARK: Показать PDF в читалке
@@ -126,51 +186,7 @@ class GenerationViewModel: ObservableObject {
         showDeleteAlert = true
     }
     
-    // MARK: Удаление документа
-    func deleteDocument() {
-        guard let document = documentToDelete else { return }
-        
-        do {
-            if fileManager.fileExists(atPath: document.fileURL.path) {
-                try fileManager.removeItem(at: document.fileURL)
-                generatedDocuments.removeAll { $0.id == document.id }
-            }
-        } catch {
-            showAlert(message: "Ошибка при удалении документа: \(error.localizedDescription)")
-        }
-        
-        documentToDelete = nil
-    }
-    
-    // MARK: Загрузка всех сохраненных документов при запуске
-    func loadSavedDocuments() {
-        do {
-            let files = try fileManager.contentsOfDirectory(
-                at: documentsDirectory,
-                includingPropertiesForKeys: [.creationDateKey],
-                options: .skipsHiddenFiles
-            )
-            
-            let pdfFiles = files.filter { $0.pathExtension.lowercased() == "pdf" }
-            
-            let documents = pdfFiles.compactMap { url -> Document? in
-                guard let creationDate = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate else {
-                    return nil
-                }
-                return Document(
-                    name: url.deletingPathExtension().lastPathComponent,
-                    creationDate: creationDate,
-                    fileURL: url,
-                    pages: []
-                )
-            }
-            
-            generatedDocuments = documents.sorted { $0.creationDate > $1.creationDate }
-            
-        } catch {
-            print("Ошибка при загрузке документов: \(error)")
-        }
-    }
+
     
     // MARK: Удаление страницы из PDF
     func deletePage(at index: Int, from document: Document) {
@@ -275,4 +291,8 @@ class GenerationViewModel: ObservableObject {
         alertMessage = message
         showAlert = true
     }
+}
+
+extension Notification.Name {
+    static let documentsDidUpdate = Notification.Name("documentsDidUpdate")
 }
