@@ -12,3 +12,15 @@
 4. После конвертации фото в pdf-файл он сохраняется в списке ниже
 5. Можно перейти на экран Мои документы и увидеть превью созданных pdf-файл
 6. При нажатии на файл - он открывается, при длительном нажатии появляется контекстное меню, в котором можно объединить, отправить и удалить файл
+
+Экран приветствия
+![](https://raw.githubusercontent.com/AndreyK-16/PDF-Converter---Aezakmi/refs/heads/main/img/welcomeView.png)
+
+Флоу слоя генерации pdf-файла
+![](https://raw.githubusercontent.com/AndreyK-16/PDF-Converter---Aezakmi/refs/heads/main/img/generationFlow.png)
+
+Флоу просмотра и опций после создания pdf-файла
+![](https://raw.githubusercontent.com/AndreyK-16/PDF-Converter---Aezakmi/refs/heads/main/img/viewAndOptionsFlow.png)
+
+Флоу слоя взаимодействия с сохраненными документами
+![](https://raw.githubusercontent.com/AndreyK-16/PDF-Converter---Aezakmi/refs/heads/main/img/libraryFlow.png)
